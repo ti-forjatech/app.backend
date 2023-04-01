@@ -1,5 +1,6 @@
 from flask import Blueprint, request
 from connection import ConnectionManager
+from db_control import Db_control
 import datetime
 
 contato_blueprint = Blueprint('contato', __name__, template_folder='templates', static_folder='static', url_prefix='/contato')
@@ -13,17 +14,25 @@ def send_contact():
         year = datetime.datetime.now().strftime('%Y')
 
         dados = {
-            "data_da_postagem":{
-                "dia":day,
-                "mes":month,
-                "ano":year,
-            },
+            "data_da_postagem":f'{day}/{month}/{year}',
             **data_from_form,
         }
 
-        con = ConnectionManager()
-        test = con.getConnection()
+        con = ConnectionManager().getConnection()
+        dbc = Db_control(con)
+        contato = dbc.prepareContact(dados)
+        contato.createInfraOfContact()
+        sent = contato.send()
 
-        return {
-            "dados": test
-        }
+        if sent:
+            return {
+                "status": "success",
+                "msg":"Mensagem registrada com sucesso!",
+            }
+        else:
+            return {
+                "status": "fail",
+                "msg":"A mensagem não foi registrada."
+            }
+
+
