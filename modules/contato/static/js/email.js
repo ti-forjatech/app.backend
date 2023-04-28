@@ -1,1 +1,0 @@
-Js file for email module
